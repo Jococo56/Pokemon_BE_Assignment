@@ -1,0 +1,312 @@
+openapi: "3.0.0"
+info:
+  description: 'Interface Specfications for the Pokemon BE interview assignment'
+  version: 1.0.0
+  title: Pokemon Evolution Tracker Backend
+
+tags:
+  - name: trainer
+    description: Operations for trainers
+  - name: pokemon
+    description: Operations for Pokemon Management
+  - name: testing
+    description: Operations needed for automated testing
+
+paths:
+  /trainer:
+    post:
+      tags:
+        - trainer
+      summary: Creates a new trainer
+      requestBody:
+        description: "Trainer information and Pokemon roster(optional, max of 6 pokemon)"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/trainer"
+            examples:
+              ash:
+                $ref: "#/components/examples/trainer"
+      responses:
+        "201":
+          description: Trainer Created
+        "400":
+          description: Bad request, invalid name or pokemon
+  /trainers:
+    get:
+      tags:
+        - trainer
+      summary: Retreives all trainers
+      responses:
+        "200":
+          description: Trainers found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/trainers"
+  /trainer/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: the trainer ID
+    get:
+      tags:
+        - trainer
+      summary: Retreives single trainer
+      responses:
+        "200":
+          description: Trainer found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/trainer"
+              examples:
+                ash:
+                  $ref: "#/components/examples/trainer"
+  /trainer/{id}/catch:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: the trainer ID
+    put:
+      tags:
+        - trainer
+      summary: Trainer catches the specified Pokemon
+      requestBody:
+        description: "Newly caught Pokemon and Pokemon to be released if Trainer is at Pokemon limit(6)"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/catch_pokemon"
+      responses:
+        "201":
+          description: Pokemon caught 😆
+        "400":
+          description: Bad request. Can occur from invalid id or invalid Pokemon params.
+
+  /trainer/{id}/release:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: the trainer ID
+      - in: query
+        name: pokemon
+        required: true
+        schema:
+          type: string
+    put:
+      tags:
+        - trainer
+      summary: Trainer releases the specified Pokemon
+      responses:
+        "200":
+          description: Pokemon released 😥
+        "400":
+          description: Bad request. Can occur from invalid id or invalid Pokemon params.
+
+  /pokemon/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: the Pokemon ID
+    get:
+      tags:
+        - pokemon
+      summary: Retreives single pokemon
+      responses:
+        "200":
+          description: Pokemon found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/pokemon"
+              examples:
+                ash:
+                  $ref: "#/components/examples/pokemon"
+        "400":
+          description: Bad Request, Pokemon not found
+  /pokemon/{id}/train:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: the Pokemon ID
+      - in: query
+        name: level
+        required: true
+        schema:
+          type: integer
+        description: the Pokemon level
+    put:
+      tags:
+        - pokemon
+      summary: Levels up single pokemon
+      responses:
+        "200":
+          description: Pokemon leveled up! 🐣
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/pokemon"
+              examples:
+                ash:
+                  $ref: "#/components/examples/pokemon"
+        "400":
+          description: Bad Request, Pokemon not found or invalid level param
+  /pokemon/{id}/give_item:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: the Pokemon ID
+      - in: query
+        name: item
+        required: true
+        schema:
+          type: string
+        description: item that may affect evolution
+        example: oran berry
+    put:
+      tags:
+        - pokemon
+      summary: Gives an item to a pokemon
+      responses:
+        "200":
+          description: Pokemon received item! 🎁
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/pokemon"
+              examples:
+                ash:
+                  $ref: "#/components/examples/pokemon"
+        "400":
+          description: Bad Request, Pokemon not found or invalid level param
+  /pokemon/trade:
+    parameters:
+      - in: query
+        name: pokemon_1
+        required: true
+        schema:
+          type: integer
+        description: ID of pokemon_1 to be traded
+        example: weedle
+      - in: query
+        name: pokemon_2
+        required: true
+        schema:
+          type: integer
+        description: ID of pokemon_2 to be traded
+        example: caterpie
+    put:
+      tags:
+        - pokemon
+      summary: Trades Pokemon between two trainers
+      responses:
+        "200":
+          description: Traded Pokemon! 🔀
+        "400":
+          description: Bad Request, Pokemon not found or invalid level param
+
+  /reset:
+    delete:
+      tags:
+        - testing
+      summary: Resets the database, used for automated testing.
+      responses:
+        "200":
+          description: database reset
+        "500":
+          description: internal server error. Issue reseting database
+
+components:
+  schemas:
+    trainers:
+      type: array
+      items:
+        $ref: "#/components/schemas/trainer"
+      example:
+        - id: 1
+          name: Ash Ketchum
+          pokemon: [pikachu, squirtle, bulbasaur]
+        - id: 2
+          name: Brock
+          pokemon: [geodude, onyx, crobat]
+    trainer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        pokemon:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+    catch_pokemon:
+      type: object
+      properties:
+        caught_pokemon:
+          type: string
+          example: cubone
+        released_pokemon:
+          type: string
+          example: ratata
+      required:
+        - caught_pokemon
+    pokemon:
+      type: object
+      properties:
+        id:
+          type: integer
+        trainer_id:
+          type: integer
+        name:
+          type: string
+        level:
+          type: integer
+        item:
+          type: string
+
+  examples:
+    pokemon:
+      summary: Pokemon model for pikachu
+      value:
+        pokemon:
+          { id: 1, trainer_id: 1, name: pikachu, level: 20, item: oran berry }
+    trainer:
+      summary: creation for Ash Ketchum
+      value:
+        id: 1
+        name: Ash Ketchum
+        pokemon:
+          [
+            { id: 1, trainer_id: 1, name: pikachu, level: 20, item: null },
+            {
+              id: 2,
+              trainer_id: 1,
+              name: squirtle,
+              level: 7,
+              item: oran berry,
+            },
+          ]
